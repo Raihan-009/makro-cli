@@ -386,6 +386,15 @@ export function configureGlobalAgents(): void {
         mtlsOptions.dispatcher,
       )
     }
+  } else if (process.env.UNDICI_FAMILY === '6') {
+    // Force IPv6 for systems on IPv6-only networks (e.g. NAT64).
+    // Set UNDICI_FAMILY=6 in your environment when Node.js fetch times out
+    // but curl works (curl uses the system IPv6 stack automatically).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const undiciMod = require('undici') as typeof undici
+    undiciMod.setGlobalDispatcher(
+      new undiciMod.Agent({ connect: { family: 6 } }),
+    )
   }
 }
 

@@ -345,11 +345,12 @@ export async function getAnthropicClient({
     authToken: isClaudeAISubscriber()
       ? getClaudeAIOAuthTokens()?.accessToken
       : undefined,
-    // Set baseURL from OAuth config when using staging OAuth
-    ...(process.env.USER_TYPE === 'ant' &&
-    isEnvTruthy(process.env.USE_STAGING_OAUTH)
-      ? { baseURL: getOauthConfig().BASE_API_URL }
-      : {}),
+    // Set baseURL: explicit ANTHROPIC_BASE_URL override takes priority, then staging OAuth
+    ...(process.env.ANTHROPIC_BASE_URL
+      ? { baseURL: process.env.ANTHROPIC_BASE_URL }
+      : process.env.USER_TYPE === 'ant' && isEnvTruthy(process.env.USE_STAGING_OAUTH)
+        ? { baseURL: getOauthConfig().BASE_API_URL }
+        : {}),
     ...ARGS,
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
   }
@@ -397,6 +398,118 @@ function getCustomHeaders(): Record<string, string> {
 
 export const CLIENT_REQUEST_ID_HEADER = 'x-client-request-id'
 
+/**
+ * When a third-party provider (e.g. MiniMax) returns SSE events that the
+ * Anthropic SDK doesn't recognise — specifically `thinking_delta` and
+ * `signature_delta` content block deltas — the SDK throws and the request
+ * appears to time out. This transform strips those unknown events so the SDK
+ * only sees standard text/tool events.
+ *
+ * We buffer raw bytes into complete SSE events (event: + data: + blank line)
+ * before deciding to keep or drop them, so the stream always stays valid.
+ */
+function stripThinkingEventsFromStream(response: Response): Response {
+  if (!response.body) return response
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('text/event-stream')) return response
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  const encoder = new TextEncoder()
+
+  // Track which content-block indices are thinking blocks so we can drop
+  // their start/delta/stop events entirely.
+  const thinkingIndices = new Set<number>()
+
+  // Buffer for incomplete lines across chunk boundaries
+  let lineBuffer = ''
+  // Buffer for lines of the current SSE event (reset on blank line)
+  let eventLines: string[] = []
+
+  function shouldDropEvent(lines: string[]): boolean {
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data:')) continue
+      const jsonStr = trimmed.slice(5).trim()
+      if (!jsonStr || jsonStr === '[DONE]') continue
+      let evt: Record<string, unknown>
+      try { evt = JSON.parse(jsonStr) } catch { continue }
+      const type = evt.type as string | undefined
+
+      if (type === 'content_block_start') {
+        const block = evt.content_block as Record<string, unknown> | undefined
+        if (block?.type === 'thinking') {
+          thinkingIndices.add(evt.index as number)
+          return true
+        }
+      }
+      if (type === 'content_block_delta') {
+        if (thinkingIndices.has(evt.index as number)) return true
+        const delta = evt.delta as Record<string, unknown> | undefined
+        const dt = delta?.type as string | undefined
+        if (dt === 'thinking_delta' || dt === 'signature_delta') return true
+      }
+      if (type === 'content_block_stop' && thinkingIndices.has(evt.index as number)) {
+        thinkingIndices.delete(evt.index as number)
+        return true
+      }
+    }
+    return false
+  }
+
+  const readable = new ReadableStream({
+    async pull(controller) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          // Flush remaining buffered event if any
+          if (eventLines.length > 0 && !shouldDropEvent(eventLines)) {
+            controller.enqueue(encoder.encode(eventLines.join('\n') + '\n'))
+          }
+          controller.close()
+          return
+        }
+
+        const text = lineBuffer + decoder.decode(value, { stream: true })
+        const rawLines = text.split('\n')
+        // Last element may be incomplete — carry it over to next chunk
+        lineBuffer = rawLines.pop() ?? ''
+
+        let output = ''
+        for (const line of rawLines) {
+          if (line === '') {
+            // Blank line = end of one SSE event
+            if (eventLines.length > 0) {
+              if (!shouldDropEvent(eventLines)) {
+                output += eventLines.join('\n') + '\n\n'
+              }
+              eventLines = []
+            } else {
+              // Preserve bare blank lines (e.g. keep-alive)
+              output += '\n'
+            }
+          } else {
+            eventLines.push(line)
+          }
+        }
+
+        if (output) {
+          controller.enqueue(encoder.encode(output))
+          return // yield to SDK after emitting data
+        }
+        // No output yet (all events filtered) — keep reading
+      }
+    },
+    cancel() { reader.cancel() },
+  })
+
+  return new Response(readable, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  })
+}
+
 function buildFetch(
   fetchOverride: ClientOptions['fetch'],
   source: string | undefined,
@@ -407,7 +520,7 @@ function buildFetch(
   // and unknown headers risk rejection by strict proxies (inc-4029 class).
   const injectClientRequestId =
     getAPIProvider() === 'firstParty' && isFirstPartyAnthropicBaseUrl()
-  return (input, init) => {
+  return async (input, init) => {
     // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
     const headers = new Headers(init?.headers)
     // Generate a client-side request ID so timeouts (which return no server
@@ -426,6 +539,7 @@ function buildFetch(
     } catch {
       // never let logging crash the fetch
     }
-    return inner(input, { ...init, headers })
+    const response = await inner(input, { ...init, headers })
+    return response
   }
 }
