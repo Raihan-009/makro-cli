@@ -339,18 +339,25 @@ export async function getAnthropicClient({
     return new AnthropicVertex(vertexArgs) as unknown as Anthropic
   }
 
-  // Determine authentication method based on available tokens
+  // Determine authentication method based on available tokens.
+  // When ANTHROPIC_AUTH_TOKEN is set, use it as Bearer via authToken (SDK param) to avoid
+  // the "missing api key" SDK error. configureApiKeyHeaders above also sets the same
+  // Authorization header in defaultHeaders — the SDK auth header takes priority, same value.
   const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
-    apiKey: isClaudeAISubscriber() ? null : apiKey || getAnthropicApiKey(),
-    authToken: isClaudeAISubscriber()
-      ? getClaudeAIOAuthTokens()?.accessToken
-      : undefined,
-    // Set baseURL: explicit ANTHROPIC_BASE_URL override takes priority, then staging OAuth
-    ...(process.env.ANTHROPIC_BASE_URL
-      ? { baseURL: process.env.ANTHROPIC_BASE_URL }
-      : process.env.USER_TYPE === 'ant' && isEnvTruthy(process.env.USE_STAGING_OAUTH)
-        ? { baseURL: getOauthConfig().BASE_API_URL }
-        : {}),
+    ...(isClaudeAISubscriber()
+      ? {
+          apiKey: null,
+          authToken: getClaudeAIOAuthTokens()?.accessToken,
+        }
+      : process.env.ANTHROPIC_AUTH_TOKEN
+        ? { authToken: process.env.ANTHROPIC_AUTH_TOKEN }
+        : { apiKey: apiKey || getAnthropicApiKey() }),
+    // Staging OAuth (Anthropic internal) overrides everything; otherwise use ANTHROPIC_BASE_URL
+    // env var if set, falling back to the configured provider endpoint.
+    baseURL:
+      process.env.USER_TYPE === 'ant' && isEnvTruthy(process.env.USE_STAGING_OAUTH)
+        ? getOauthConfig().BASE_API_URL
+        : process.env.ANTHROPIC_BASE_URL || 'https://agione.pro/hyperone/xapi/api',
     ...ARGS,
     ...(isDebugToStdErr() && { logger: createStderrLogger() }),
   }
