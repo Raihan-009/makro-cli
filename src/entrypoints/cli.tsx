@@ -10,6 +10,43 @@ import {
   redactSecretValueForDisplay,
 } from '../utils/providerProfile.js'
 
+// Bootstrap env: load .env.local for local dev, then apply MAKRO_* mappings
+// and hardcoded model defaults. Must run before any other module reads env vars.
+// eslint-disable-next-line custom-rules/no-top-level-side-effects
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+// eslint-disable-next-line custom-rules/no-top-level-side-effects
+;((): void => {
+  // 1. Load .env.local (local dev only — not present in published installs)
+  try {
+    const envPath = resolve(process.cwd(), '.env.local')
+    if (existsSync(envPath)) {
+      for (const raw of readFileSync(envPath, 'utf8').split('\n')) {
+        const line = raw.trim()
+        if (!line || line.startsWith('#')) continue
+        const eq = line.indexOf('=')
+        if (eq === -1) continue
+        const key = line.slice(0, eq).trim()
+        let val = line.slice(eq + 1).trim()
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1)
+        }
+        process.env[key] ??= val
+      }
+    }
+  } catch { /* non-fatal */ }
+
+  // 2. Map user-facing env vars → internal vars
+  if (process.env.MAKRO_TOKEN)    process.env.ANTHROPIC_AUTH_TOKEN ??= process.env.MAKRO_TOKEN
+  if (process.env.MAKRO_BASE_URL) process.env.ANTHROPIC_BASE_URL   ??= process.env.MAKRO_BASE_URL
+
+  // 3. Hardcoded model defaults (no extra config needed from users)
+  process.env.ANTHROPIC_MODEL                  ??= 'minimax/minimax-m2.5/c254e'
+  process.env.ANTHROPIC_DEFAULT_SONNET_MODEL   ??= 'minimax/minimax-m2.5/c254e'
+  process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL    ??= 'minimax/minimax-m2.5/c254e'
+  process.env.ANTHROPIC_DEFAULT_OPUS_MODEL     ??= 'minimax/minimax-m2.5/c254e'
+})()
+
 // OpenClaude: disable experimental API betas by default.
 // Tool search (defer_loading), global cache scope, and context management
 // require internal API support not available to external accounts → 500.

@@ -1,8 +1,7 @@
 /**
- * Makro Code startup screen — filled-block text logo with red gradient.
- * Called once at CLI startup before the Ink UI renders.
- *
- * Addresses: https://github.com/Gitlawb/openclaude/issues/55
+ * Makro Code startup screen — full-frame dashboard layout.
+ * MAKRO: vivid crimson gradient. CODE: white→rose→red frosted gradient.
+ * Completely different from v1: outer frame, centered logos, header/footer bars.
  */
 
 declare const MACRO: { VERSION: string; DISPLAY_VERSION?: string }
@@ -10,6 +9,7 @@ declare const MACRO: { VERSION: string; DISPLAY_VERSION?: string }
 const ESC = '\x1b['
 const RESET = `${ESC}0m`
 const DIM = `${ESC}2m`
+const BOLD = `${ESC}1m`
 
 type RGB = [number, number, number]
 const rgb = (r: number, g: number, b: number) => `${ESC}38;2;${r};${g};${b}m`
@@ -40,43 +40,67 @@ function paintLine(text: string, stops: RGB[], lineT: number): string {
   return out + RESET
 }
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
+// ─── Color Palettes ────────────────────────────────────────────────────────────
 
-const RED_GRAD: RGB[] = [
-  [255, 80, 80],
-  [230, 40, 40],
-  [200, 20, 20],
+// MAKRO: vivid neon-crimson at top → deep blood red at bottom
+const MAKRO_GRAD: RGB[] = [
+  [255, 60, 60],
+  [240, 20, 20],
+  [210, 5, 5],
   [170, 0, 0],
   [130, 0, 0],
-  [100, 0, 0],
+  [95, 0, 0],
 ]
 
-const ACCENT: RGB = [255, 80, 80]
-const CREAM: RGB = [240, 200, 200]
-const DIMCOL: RGB = [160, 80, 80]
-const BORDER: RGB = [120, 40, 40]
+// CODE: pure white → light rose → soft coral → warm red (frosted glow)
+const CODE_GRAD: RGB[] = [
+  [255, 255, 255],
+  [255, 230, 230],
+  [255, 185, 185],
+  [250, 135, 135],
+  [230, 80, 80],
+  [205, 40, 40],
+]
 
-// ─── Filled Block Text Logo ───────────────────────────────────────────────────
+// Separator: deep red → coral → soft white peak → coral → deep red
+const SEP_GRAD: RGB[] = [
+  [60, 0, 0],
+  [140, 25, 25],
+  [210, 70, 70],
+  [255, 160, 160],
+  [210, 70, 70],
+  [140, 25, 25],
+  [60, 0, 0],
+]
+
+const ACCENT: RGB  = [255, 80, 80]
+const WHITE: RGB   = [255, 255, 255]
+const DIMCOL: RGB  = [140, 60, 60]
+const BORD: RGB    = [110, 28, 28]   // outer frame border color
+const BORD_LIT: RGB = [170, 50, 50]  // brighter border for dividers
+
+// ─── Logos ────────────────────────────────────────────────────────────────────
 
 const LOGO_MAKRO = [
-  `  \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 `,
-  `  \u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2551 \u2588\u2588\u2554\u255d\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2588\u2588\u2557`,
-  `  \u2588\u2588\u2554\u2588\u2588\u2588\u2588\u2554\u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2554\u255d \u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d\u2588\u2588\u2551   \u2588\u2588\u2551`,
-  `  \u2588\u2588\u2551\u255a\u2588\u2588\u2554\u255d\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2588\u2588\u2557 \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557 \u2588\u2588\u2551   \u2588\u2588\u2551`,
-  `  \u2588\u2588\u2551 \u255a\u2550\u255d \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2557\u2588\u2588\u2551  \u255a\u2588\u2588\u2557\u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d`,
-  `  \u255a\u2550\u255d     \u255a\u2550\u255d\u255a\u2550\u255d  \u255a\u2550\u255d\u255a\u2550\u255d  \u255a\u2550\u255d\u255a\u2550\u255d   \u255a\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u255d `,
+  `\u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557`,
+  `\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2551 \u2588\u2588\u2554\u255d\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2588\u2588\u2557`,
+  `\u2588\u2588\u2554\u2588\u2588\u2588\u2588\u2554\u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2554\u255d \u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d\u2588\u2588\u2551   \u2588\u2588\u2551`,
+  `\u2588\u2588\u2551\u255a\u2588\u2588\u2554\u255d\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2588\u2588\u2557 \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557 \u2588\u2588\u2551   \u2588\u2588\u2551`,
+  `\u2588\u2588\u2551 \u255a\u2550\u255d \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2557\u2588\u2588\u2551  \u255a\u2588\u2588\u2557\u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d`,
+  `\u255a\u2550\u255d     \u255a\u2550\u255d\u255a\u2550\u255d  \u255a\u2550\u255d\u255a\u2550\u255d  \u255a\u2550\u255d\u255a\u2550\u255d   \u255a\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u255d`,
 ]
 
-const LOGO_CODE = [
-  `   \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557`,
-  `  \u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d \u2588\u2588\u2554\u2550\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d`,
-  `  \u2588\u2588\u2551      \u2588\u2588\u2551   \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2557  `,
-  `  \u2588\u2588\u2551      \u2588\u2588\u2551   \u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u255d  `,
-  `  \u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d\u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557`,
-  `   \u255a\u2550\u2550\u2550\u2550\u2550\u255d  \u255a\u2550\u2550\u2550\u2550\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u2550\u255d`,
+// C(8) + space + L(8) + space + I(3) = 21 chars per line
+const LOGO_CLI = [
+  ` \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557      \u2588\u2588\u2557`,
+  `\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d \u2588\u2588\u2551      \u2588\u2588\u2551`,
+  `\u2588\u2588\u2551      \u2588\u2588\u2551      \u2588\u2588\u2551`,
+  `\u2588\u2588\u2551      \u2588\u2588\u2551      \u2588\u2588\u2551`,
+  `\u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2551`,
+  ` \u255a\u2550\u2550\u2550\u2550\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u2550\u255d \u255a\u2550\u255d`,
 ]
 
-// ─── Provider detection ───────────────────────────────────────────────────────
+// ─── Provider detection ────────────────────────────────────────────────────────
 
 function detectProvider(): { name: string; model: string; baseUrl: string; isLocal: boolean } {
   const useGemini = process.env.CLAUDE_CODE_USE_GEMINI === '1' || process.env.CLAUDE_CODE_USE_GEMINI === 'true'
@@ -91,8 +115,7 @@ function detectProvider(): { name: string; model: string; baseUrl: string; isLoc
 
   if (useGithub) {
     const model = process.env.OPENAI_MODEL || 'github:copilot'
-    const baseUrl =
-      process.env.OPENAI_BASE_URL || 'https://models.github.ai/inference'
+    const baseUrl = process.env.OPENAI_BASE_URL || 'https://models.github.ai/inference'
     return { name: 'GitHub Models', model, baseUrl, isLocal: false }
   }
 
@@ -102,17 +125,16 @@ function detectProvider(): { name: string; model: string; baseUrl: string; isLoc
     const isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)
     let name = 'OpenAI'
     if (/deepseek/i.test(baseUrl) || /deepseek/i.test(rawModel))       name = 'DeepSeek'
-    else if (/openrouter/i.test(baseUrl))                             name = 'OpenRouter'
-    else if (/together/i.test(baseUrl))                               name = 'Together AI'
-    else if (/groq/i.test(baseUrl))                                   name = 'Groq'
+    else if (/openrouter/i.test(baseUrl))                               name = 'OpenRouter'
+    else if (/together/i.test(baseUrl))                                 name = 'Together AI'
+    else if (/groq/i.test(baseUrl))                                     name = 'Groq'
     else if (/mistral/i.test(baseUrl) || /mistral/i.test(rawModel))     name = 'Mistral'
-    else if (/azure/i.test(baseUrl))                                  name = 'Azure OpenAI'
-    else if (/localhost:11434/i.test(baseUrl))                        name = 'Ollama'
-    else if (/localhost:1234/i.test(baseUrl))                         name = 'LM Studio'
-    else if (/llama/i.test(rawModel))                                    name = 'Meta Llama'
-    else if (isLocal)                                                  name = 'Local'
-    
-    // Resolve model alias to actual model name + reasoning effort
+    else if (/azure/i.test(baseUrl))                                    name = 'Azure OpenAI'
+    else if (/localhost:11434/i.test(baseUrl))                          name = 'Ollama'
+    else if (/localhost:1234/i.test(baseUrl))                           name = 'LM Studio'
+    else if (/llama/i.test(rawModel))                                   name = 'Meta Llama'
+    else if (isLocal)                                                    name = 'Local'
+
     let displayModel = rawModel
     const codexAliases: Record<string, { model: string; reasoningEffort?: string }> = {
       codexplan: { model: 'gpt-5.4', reasoningEffort: 'high' },
@@ -130,85 +152,142 @@ function detectProvider(): { name: string; model: string; baseUrl: string; isLoc
     if (alias in codexAliases) {
       const resolved = codexAliases[alias]
       displayModel = resolved.model
-      if (resolved.reasoningEffort) {
-        displayModel = `${displayModel} (${resolved.reasoningEffort})`
-      }
+      if (resolved.reasoningEffort) displayModel = `${displayModel} (${resolved.reasoningEffort})`
     }
-    
+
     return { name, model: displayModel, baseUrl, isLocal }
   }
 
-  // Default: Huawei (with optional base URL override)
   const model = process.env.ANTHROPIC_MODEL || process.env.CLAUDE_MODEL || 'claude-sonnet-4-6'
   const baseUrl = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'
   const isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)
   return { name: 'Huawei', model, baseUrl, isLocal }
 }
 
-// ─── Box drawing ──────────────────────────────────────────────────────────────
+// ─── Render helpers ────────────────────────────────────────────────────────────
 
-function boxRow(content: string, width: number, rawLen: number): string {
-  const pad = Math.max(0, width - 2 - rawLen)
-  return `${rgb(...BORDER)}\u2502${RESET}${content}${' '.repeat(pad)}${rgb(...BORDER)}\u2502${RESET}`
+// Frame line: border │ + content padded to IW + border │
+function framed(content: string, rawLen: number, IW: number, borderColor: RGB): string {
+  const B = rgb(...borderColor)
+  const pad = Math.max(0, IW - rawLen)
+  return `${B}\u2502${RESET}${content}${' '.repeat(pad)}${B}\u2502${RESET}`
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// Empty line inside frame
+function emptyFrame(IW: number, borderColor: RGB): string {
+  return `${rgb(...borderColor)}\u2502${RESET}${' '.repeat(IW)}${rgb(...borderColor)}\u2502${RESET}`
+}
+
+// Horizontal rule: tl + ─*IW + tr
+function hRule(l: string, r: string, IW: number, borderColor: RGB): string {
+  const B = rgb(...borderColor)
+  return `${B}${l}${'\u2500'.repeat(IW)}${r}${RESET}`
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
 
 export function printStartupScreen(): void {
-  // Skip in non-interactive / CI / print mode
   if (process.env.CI || !process.stdout.isTTY) return
 
   const p = detectProvider()
-  const W = 62
+
+  // IW = inner width (space between │ chars). Outer total = IW + 2.
+  // MAKRO logo lines are ~44 chars; we want breathing room → IW = 56
+  const IW = 56
   const out: string[] = []
 
   out.push('')
 
-  // Gradient logo
-  const allLogo = [...LOGO_MAKRO, '', ...LOGO_CODE]
-  const total = allLogo.length
-  for (let i = 0; i < total; i++) {
-    const t = total > 1 ? i / (total - 1) : 0
-    if (allLogo[i] === '') {
-      out.push('')
-    } else {
-      out.push(paintLine(allLogo[i], RED_GRAD, t))
-    }
+  // ── Top border ──────────────────────────────────────────────────────────────
+  out.push(hRule('\u250c', '\u2510', IW, BORD))
+
+  // ── Header: makro (left)  ·  version (right) ────────────────────────────────
+  const verStr = `v${MACRO.DISPLAY_VERSION ?? MACRO.VERSION}`
+  const hLeftRaw  = ` \u25c6 makro`          // " ◆ makro" → 8 chars
+  const hRightRaw = `${verStr} `             // "v0.1.0 " → dynamic
+  const hMid = IW - hLeftRaw.length - hRightRaw.length
+  const hContent =
+    ` ${rgb(...ACCENT)}\u25c6${RESET} ${BOLD}${rgb(...WHITE)}makro${RESET}` +
+    ' '.repeat(Math.max(0, hMid)) +
+    `${DIM}${rgb(...DIMCOL)}${verStr}${RESET} `
+  out.push(framed(hContent, hLeftRaw.length + Math.max(0, hMid) + hRightRaw.length, IW, BORD))
+
+  // ── Divider after header ─────────────────────────────────────────────────────
+  out.push(hRule('\u251c', '\u2524', IW, BORD_LIT))
+
+  // ── Empty padding ────────────────────────────────────────────────────────────
+  out.push(emptyFrame(IW, BORD))
+
+  // ── MAKRO logo — centered inside the frame ───────────────────────────────────
+  const makroMax = Math.max(...LOGO_MAKRO.map(l => l.length))
+  for (let i = 0; i < LOGO_MAKRO.length; i++) {
+    const t = i / (LOGO_MAKRO.length - 1)
+    const line = LOGO_MAKRO[i]
+    const lPad = Math.floor((IW - makroMax) / 2)
+    const rPad = IW - lPad - line.length
+    const B = rgb(...BORD)
+    out.push(`${B}\u2502${RESET}${' '.repeat(lPad)}${paintLine(line, MAKRO_GRAD, t)}${' '.repeat(Math.max(0, rPad))}${B}\u2502${RESET}`)
   }
 
-  out.push('')
+  // ── Glowing separator with diamond endpoints ─────────────────────────────────
+  out.push(emptyFrame(IW, BORD))
+  // "  ◆" + ─ * (IW-6) + "◆  " = IW chars
+  const sepRaw = `  \u25c6${ '\u2500'.repeat(IW - 6) }\u25c6  `
+  const B = rgb(...BORD)
+  out.push(`${B}\u2502${RESET}${paintLine(sepRaw, SEP_GRAD, 0.5)}${B}\u2502${RESET}`)
+  out.push(emptyFrame(IW, BORD))
 
-  // Tagline
-  out.push(`  ${rgb(...ACCENT)}\u2726${RESET} ${rgb(...CREAM)}Any model. Every tool. Zero limits.${RESET} ${rgb(...ACCENT)}\u2726${RESET}`)
-  out.push('')
-
-  // Provider info box
-  out.push(`${rgb(...BORDER)}\u2554${'\u2550'.repeat(W - 2)}\u2557${RESET}`)
-
-  const lbl = (k: string, v: string, c: RGB = CREAM): [string, number] => {
-    const padK = k.padEnd(9)
-    return [` ${DIM}${rgb(...DIMCOL)}${padK}${RESET} ${rgb(...c)}${v}${RESET}`, ` ${padK} ${v}`.length]
+  // ── CODE logo — centered, offset slightly right for visual balance ────────────
+  const codeMax = Math.max(...LOGO_CLI.map(l => l.length))
+  const codeOffset = Math.floor((IW - codeMax) / 2) + 2  // +2 for right-lean
+  for (let i = 0; i < LOGO_CLI.length; i++) {
+    const t = i / (LOGO_CLI.length - 1)
+    const line = LOGO_CLI[i]
+    const lPad = codeOffset
+    const rPad = IW - lPad - line.length
+    out.push(`${B}\u2502${RESET}${' '.repeat(lPad)}${paintLine(line, CODE_GRAD, t)}${' '.repeat(Math.max(0, rPad))}${B}\u2502${RESET}`)
   }
 
-  const provC: RGB = p.isLocal ? [130, 175, 130] : ACCENT
-  let [r, l] = lbl('Provider', p.name, provC)
-  out.push(boxRow(r, W, l))
-  ;[r, l] = lbl('Model', p.model)
-  out.push(boxRow(r, W, l))
+  // ── Empty padding ────────────────────────────────────────────────────────────
+  out.push(emptyFrame(IW, BORD))
+
+  // ── Provider section divider ─────────────────────────────────────────────────
+  out.push(hRule('\u251c', '\u2524', IW, BORD_LIT))
+
+  // ── Provider / Model / Endpoint ──────────────────────────────────────────────
+  const provC: RGB = p.isLocal ? [120, 210, 120] : ACCENT
+
+  const lbl = (key: string, val: string, valColor: RGB = WHITE): [string, number] => {
+    const k = key.padEnd(9)
+    const raw = ` ${k} ${val}`
+    const styled = ` ${DIM}${rgb(...DIMCOL)}${k}${RESET} ${BOLD}${rgb(...valColor)}${val}${RESET}`
+    return [styled, raw.length]
+  }
+
+  let [row, len] = lbl('Provider', p.name, provC)
+  out.push(framed(row, len, IW, BORD_LIT))
+  ;[row, len] = lbl('Model', p.model.length > 36 ? p.model.slice(0, 33) + '...' : p.model)
+  out.push(framed(row, len, IW, BORD_LIT))
   const ep = p.baseUrl.length > 38 ? p.baseUrl.slice(0, 35) + '...' : p.baseUrl
-  ;[r, l] = lbl('Endpoint', ep)
-  out.push(boxRow(r, W, l))
+  ;[row, len] = lbl('Endpoint', ep)
+  out.push(framed(row, len, IW, BORD_LIT))
 
-  out.push(`${rgb(...BORDER)}\u2560${'\u2550'.repeat(W - 2)}\u2563${RESET}`)
+  // ── Status bar ───────────────────────────────────────────────────────────────
+  out.push(hRule('\u251c', '\u2524', IW, BORD_LIT))
 
-  const sC: RGB = p.isLocal ? [130, 175, 130] : ACCENT
-  const sL = p.isLocal ? 'local' : 'cloud'
-  const sRow = ` ${rgb(...sC)}\u25cf${RESET} ${DIM}${rgb(...DIMCOL)}${sL}${RESET}    ${DIM}${rgb(...DIMCOL)}Ready \u2014 type ${RESET}${rgb(...ACCENT)}/help${RESET}${DIM}${rgb(...DIMCOL)} to begin${RESET}`
-  const sLen = ` \u25cf ${sL}    Ready \u2014 type /help to begin`.length
-  out.push(boxRow(sRow, W, sLen))
+  const sC: RGB  = p.isLocal ? [120, 210, 120] : ACCENT
+  const sLabel   = p.isLocal ? 'local' : 'cloud'
+  const statusRaw     = ` \u25cf ${sLabel}   Ready \u2014 type /help to begin`
+  const statusStyled  =
+    ` ${rgb(...sC)}\u25cf${RESET} ` +
+    `${DIM}${rgb(...DIMCOL)}${sLabel}${RESET}` +
+    `   ${DIM}${rgb(...DIMCOL)}Ready \u2014 type ${RESET}` +
+    `${rgb(...ACCENT)}/help${RESET}` +
+    `${DIM}${rgb(...DIMCOL)} to begin${RESET}`
+  out.push(framed(statusStyled, statusRaw.length, IW, BORD_LIT))
 
-  out.push(`${rgb(...BORDER)}\u255a${'\u2550'.repeat(W - 2)}\u255d${RESET}`)
-  out.push(`  ${DIM}${rgb(...DIMCOL)}makro code ${RESET}${rgb(...ACCENT)}v${MACRO.DISPLAY_VERSION ?? MACRO.VERSION}${RESET}`)
+  // ── Bottom border ─────────────────────────────────────────────────────────────
+  out.push(hRule('\u2514', '\u2518', IW, BORD))
   out.push('')
 
   process.stdout.write(out.join('\n') + '\n')

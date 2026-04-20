@@ -330,6 +330,36 @@ function getCodexModelOptions(): ModelOption[] {
 // @[MODEL LAUNCH]: Update the model picker lists below to include/reorder options for the new model.
 // Each user tier (ant, Max/Team Premium, Pro/Team Standard/Enterprise, PAYG 1P, PAYG 3P) has its own list.
 function getModelOptionsBase(fastMode = false): ModelOption[] {
+  // When custom model env vars are set, show only those — skip all hardcoded Claude options.
+  const envSonnet = process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
+  const envOpus   = process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
+  const envHaiku  = process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
+  if (envSonnet || envOpus || envHaiku) {
+    const customOptions: ModelOption[] = []
+    if (envSonnet) {
+      customOptions.push({
+        value: 'sonnet',
+        label: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL_NAME ?? 'Sonnet',
+        description: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL_DESCRIPTION ?? envSonnet,
+      })
+    }
+    if (envOpus) {
+      customOptions.push({
+        value: 'opus',
+        label: process.env.ANTHROPIC_DEFAULT_OPUS_MODEL_NAME ?? 'Opus',
+        description: process.env.ANTHROPIC_DEFAULT_OPUS_MODEL_DESCRIPTION ?? envOpus,
+      })
+    }
+    if (envHaiku) {
+      customOptions.push({
+        value: 'haiku',
+        label: process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME ?? 'Haiku',
+        description: process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_DESCRIPTION ?? envHaiku,
+      })
+    }
+    return customOptions
+  }
+
   if (process.env.USER_TYPE === 'ant') {
     // Build options from antModels config
     const antModelOptions: ModelOption[] = getAntModels().map(m => ({

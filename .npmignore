@@ -1,0 +1,32 @@
+# Source — never publish
+src/
+scripts/
+docs/
+vscode-extension/
+tests/
+*.test.ts
+*.test.tsx
+*.test.mjs
+tsconfig*.json
+bun.lock
+bun.lockb
+.env*
+.env.local
+.env.example
+
+# Dev config
+.eslintrc*
+.biome*
+biome.json
+.editorconfig
+.gitignore
+.gitattributes
+CHANGELOG*
+SECURITY*
+ANDROID_INSTALL*
+LICENSE
+
+# Reports / local artifacts
+reports/
+*.log
+*.tgz

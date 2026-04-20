@@ -58,7 +58,7 @@ export function getWebFetchUserAgent(): string {
   const supportUrl =
     getAPIProvider() === 'firstParty'
       ? 'https://support.anthropic.com/'
-      : 'https://github.com/Gitlawb/openclaude'
+      : 'https://www.npmjs.com/package/@makro-code/cli'
   return `Claude-User (${getClaudeCodeUserAgent()}; +${supportUrl})`
 }
 

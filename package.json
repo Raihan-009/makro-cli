@@ -1,49 +1,22 @@
 {
-  "name": "@cp/makro-code",
-  "version": "0.1.0",
-  "description": "Claude Code opened to any LLM — OpenAI, Gemini, DeepSeek, Ollama, and 200+ models",
+  "name": "@makro-code/cli",
+  "version": "0.2.1",
+  "description": "AI coding assistant for the terminal",
   "type": "module",
   "bin": {
-    "makro-code": "./bin/makro-code"
+    "makro-code": "./bin/makro-code",
+    "makro-cli": "./bin/makro-cli"
   },
   "files": [
-    "bin/",
+    "bin/makro-code",
+    "bin/makro-cli",
     "dist/cli.mjs",
     "README.md"
   ],
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "dev": "bun run build && node dist/cli.mjs",
-    "validate-config": "bun run scripts/validate-config.ts",
-    "dev:profile": "bun run scripts/provider-launch.ts",
-    "dev:profile:fast": "bun run scripts/provider-launch.ts auto --fast --bare",
-    "dev:codex": "bun run scripts/provider-launch.ts codex",
-    "dev:openai": "bun run scripts/provider-launch.ts openai",
-    "dev:gemini": "bun run scripts/provider-launch.ts gemini",
-    "dev:ollama": "bun run scripts/provider-launch.ts ollama",
-    "dev:ollama:fast": "bun run scripts/provider-launch.ts ollama --fast --bare",
-    "dev:atomic-chat": "bun run scripts/provider-launch.ts atomic-chat",
-    "profile:init": "bun run scripts/provider-bootstrap.ts",
-    "profile:recommend": "bun run scripts/provider-recommend.ts",
-    "profile:auto": "bun run scripts/provider-recommend.ts --apply",
-    "profile:codex": "bun run profile:init -- --provider codex --model codexplan",
-    "profile:fast": "bun run profile:init -- --provider ollama --model llama3.2:3b",
-    "profile:code": "bun run profile:init -- --provider ollama --model qwen2.5-coder:7b",
-    "dev:fast": "bun run profile:fast && bun run dev:ollama:fast",
-    "dev:code": "bun run profile:code && bun run dev:profile",
     "start": "node dist/cli.mjs",
-    "test:provider-recommendation": "bun test src/utils/providerRecommendation.test.ts src/utils/providerProfile.test.ts",
-    "typecheck": "tsc --noEmit",
-    "smoke": "bun run build && node dist/cli.mjs --version",
-    "verify:privacy": "bun run scripts/verify-no-phone-home.ts",
-    "build:verified": "bun run build && bun run verify:privacy",
-    "test:provider": "bun test src/services/api/*.test.ts src/utils/context.test.ts",
-    "doctor:runtime": "bun run scripts/system-check.ts",
-    "doctor:runtime:json": "bun run scripts/system-check.ts --json",
-    "doctor:report": "bun run scripts/system-check.ts --out reports/doctor-runtime.json",
-    "hardening:check": "bun run smoke && bun run doctor:runtime",
-    "hardening:strict": "bun run typecheck && bun run hardening:check",
-    "prepack": "npm run build"
+    "smoke": "bun run build && node dist/cli.mjs --version"
   },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "0.3.0",
@@ -129,21 +102,12 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://gitlawb.com/z6MkqDnb7Siv3Cwj7pGJq4T5EsUisECqR8KpnDLwcaZq5TPr/openclaude"
-  },
   "keywords": [
-    "claude-code",
-    "openai",
-    "llm",
     "cli",
-    "agent",
-    "deepseek",
-    "ollama",
-    "gemini"
+    "ai",
+    "coding-assistant"
   ],
-  "license": "SEE LICENSE FILE",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   }
