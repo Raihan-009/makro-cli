@@ -1,10 +1,10 @@
 {
-  "name": "@gitlawb/openclaude",
-  "version": "0.1.7",
+  "name": "@cp/makro-code",
+  "version": "0.1.0",
   "description": "Claude Code opened to any LLM — OpenAI, Gemini, DeepSeek, Ollama, and 200+ models",
   "type": "module",
   "bin": {
-    "openclaude": "./bin/openclaude"
+    "makro-code": "./bin/makro-code"
   },
   "files": [
     "bin/",

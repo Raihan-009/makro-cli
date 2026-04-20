@@ -182,7 +182,7 @@ export function buildCurrentProviderSummary(options?: {
   }
 
   return {
-    providerLabel: 'Anthropic',
+    providerLabel: 'Huawei',
     modelLabel: getSafeDisplayValue(
       processEnv.ANTHROPIC_MODEL ??
         processEnv.CLAUDE_MODEL ??

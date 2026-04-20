@@ -138,11 +138,11 @@ function detectProvider(): { name: string; model: string; baseUrl: string; isLoc
     return { name, model: displayModel, baseUrl, isLocal }
   }
 
-  // Default: Anthropic (with optional base URL override)
+  // Default: Huawei (with optional base URL override)
   const model = process.env.ANTHROPIC_MODEL || process.env.CLAUDE_MODEL || 'claude-sonnet-4-6'
   const baseUrl = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'
   const isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)
-  return { name: 'Anthropic', model, baseUrl, isLocal }
+  return { name: 'Huawei', model, baseUrl, isLocal }
 }
 
 // ─── Box drawing ──────────────────────────────────────────────────────────────

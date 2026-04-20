@@ -294,4 +294,4 @@ if (!result.success) {
   process.exit(1)
 }
 
-console.log(`✓ Built openclaude v${version} → dist/cli.mjs`)
+console.log(`✓ Built makro code v${version} → dist/cli.mjs`)

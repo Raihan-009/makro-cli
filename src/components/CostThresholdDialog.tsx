@@ -12,7 +12,7 @@ function getProviderLabel(): string {
   const provider = getAPIProvider()
   switch (provider) {
     case 'firstParty':
-      return 'Anthropic API'
+      return 'Huawei API'
     case 'bedrock':
       return 'AWS Bedrock'
     case 'vertex':
